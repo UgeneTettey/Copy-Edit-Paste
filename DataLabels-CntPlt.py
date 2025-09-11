@@ -29,49 +29,49 @@ plt.show()
 # =========== F U N C T I O N A L    A P P R O A C H =========================
 import seaborn as sns
 import matplotlib.pyplot as plt
+import math
 
-def labeled_countplot(df, column, title=None, figsize=(8,6), fontsize=12, rotation=0):
+def plot_countplot(df, columns, n_cols=3, figsize_per_plot=(8,6), fontsize=12, rotation=0):
     """
-    Creates a Seaborn countplot with data labels.
+    Plots countplots for specified categorical columns in the DataFrame as subplots.
 
-    Parameters:
-    -----------
-    df : pandas.DataFrame
-        The dataset containing the column to plot.
-    column : str
-        The name of the column to visualize (categorical or discrete).
-    title : str, optional
-        Title for the plot. Defaults to 'Count of <column>'.
-    figsize : tuple, optional
-        Size of the figure (width, height).
-    fontsize : int, optional
-        Font size for data labels.
-    rotation : int, optional
-        Angle of x-axis labels (useful for long category names).
+    Args:
+        df (pd.DataFrame): The dataset containing the columns to plot.
+        columns (list): List of categorical column names to plot.
+        n_cols (int): Number of columns in the subplot grid.
+        figsize_per_plot (tuple): Size of each subplot (width, height).
+        fontsize (int): Font size for data labels.
+        rotation (int): Angle of x-axis labels.
     """
-    
-    plt.figure(figsize=figsize)
-    ax = sns.countplot(x=column, data=df, edgecolor='black', order=df[column].value_counts().index)
+    cat_feats = len(columns)
+    if cat_feats == 0:
+        print('No columns specified to plot')
+        return
 
-    # Title
-    if not title:
-        title = f"Count of {column}"
-    plt.title(title, fontsize=14)
-    
-    # Remove y-axis ticks (optional for cleaner look)
-    plt.yticks([])
+    n_rows = math.ceil(cat_feats / n_cols)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(figsize_per_plot[0] * n_cols, figsize_per_plot[1] * n_rows))
+    axes = axes.flatten() if cat_feats > 1 else [axes]
 
-    # Rotate x-axis labels if needed
-    plt.xticks(rotation=rotation)
-    
-    # Add data labels above bars
-    ax.bar_label(ax.containers[0], label_type='edge', fontsize=fontsize)
+    for i, column in enumerate(columns):
+        ax = axes[i]
+        sns.countplot(x=df[column], ax=ax)
+        ax.set_title(f"Count of {column}")
+        ax.set_xlabel(column)
+        ax.set_ylabel("Count")
+        ax.tick_params(axis='x', labelrotation=rotation)
+        ax.tick_params(axis='y', left=False, labelleft=False)
+        for container in ax.containers:
+            ax.bar_label(container, label_type='edge', fontsize=fontsize)
 
-    plt.xlabel(column)
-    plt.ylabel('')  # remove redundant axis label
+    # Hide unused subplots
+    for j in range(i+1, len(axes)):
+        axes[j].set_visible(False)
+
     plt.tight_layout()
     plt.show()
 
+
 # Example usage:
-# labeled_countplot(df, column='target')
-# labeled_countplot(df, column='gender', rotation=45)
+# plot_countplot(df, column='target')
+# plot_countplot(df, ['target', 'gender', 'education'], n_cols=2, rotation=45)
+# plot_countplot(df, column='gender', rotation=45)
